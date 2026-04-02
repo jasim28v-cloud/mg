@@ -15,10 +15,6 @@ let agoraClient = null;
 let localTracks = { videoTrack: null, audioTrack: null };
 let isCallActive = false;
 
-// ==================== ADMIN CREDENTIALS ====================
-const ADMIN_EMAIL = "jasim28v@gmail.com";
-const ADMIN_PASSWORD = "vv2314vv";
-
 // ==================== Helper Functions ====================
 function showToast(message, duration = 2000) {
     const toast = document.getElementById('customToast');
@@ -273,7 +269,7 @@ window.login = async function() {
         document.getElementById('authScreen').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
         
-        // ✅ Admin check - Show admin icon in top bar
+        // ✅ Admin check
         if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
             showToast('🌟 مرحباً بك في لوحة التحكم يا مدير!');
             await db.ref(`users/${currentUser.uid}`).update({ 
@@ -284,17 +280,11 @@ window.login = async function() {
             });
             currentUser.isAdmin = true;
             currentUser.verified = true;
-            // Show admin icon in top bar
-            const adminIcon = document.getElementById('adminIcon');
-            if (adminIcon) adminIcon.style.display = 'inline-block';
             setTimeout(() => {
                 openAdminPanel();
             }, 500);
         } else {
             showToast(`مرحباً ${currentUser.displayName || 'مستخدم'}!`);
-            // Hide admin icon for non-admin
-            const adminIcon = document.getElementById('adminIcon');
-            if (adminIcon) adminIcon.style.display = 'none';
         }
         
         loadFeed();
@@ -962,7 +952,7 @@ window.searchAll = async function() {
     document.getElementById('searchResults').innerHTML = html || '<div class="text-center p-4 text-gray-500">لا توجد نتائج</div>';
 };
 
-// ==================== ADMIN PANEL (PROFESSIONAL) ====================
+// ==================== Admin Panel ====================
 window.openAdminPanel = async function() {
     if (currentUser.email !== ADMIN_EMAIL && !currentUser.isAdmin) {
         showToast('🚫 غير مصرح لك بالدخول إلى لوحة التحكم');
@@ -971,91 +961,31 @@ window.openAdminPanel = async function() {
     
     showToast('🔧 جاري تحميل لوحة التحكم...');
     
-    // Load statistics
     const usersSnapshot = await db.ref('users').once('value');
     const postsSnapshot = await db.ref('posts').once('value');
     const commentsSnapshot = await db.ref('comments').once('value');
-    
     const usersCount = usersSnapshot.exists() ? Object.keys(usersSnapshot.val()).length : 0;
     const postsCount = postsSnapshot.exists() ? Object.keys(postsSnapshot.val()).length : 0;
-    
     let commentsCount = 0;
-    if (commentsSnapshot.exists()) {
-        for (const pc of Object.values(commentsSnapshot.val())) {
-            commentsCount += Object.keys(pc).length;
-        }
-    }
-    
+    if (commentsSnapshot.exists()) for (const pc of Object.values(commentsSnapshot.val())) commentsCount += Object.keys(pc).length;
     document.getElementById('adminUsersCount').textContent = usersCount;
     document.getElementById('adminPostsCount').textContent = postsCount;
     document.getElementById('adminCommentsCount').textContent = commentsCount;
     
-    // Users list
     let usersHtml = '';
-    if (usersSnapshot.exists()) {
-        const usersList = Object.values(usersSnapshot.val());
-        for (const user of usersList) {
-            usersHtml += `<div class="admin-item">
-                <div>
-                    <div class="admin-item-name">${escapeHtml(user.name)}</div>
-                    <div class="admin-item-email">${escapeHtml(user.email)}</div>
-                </div>
-                <div>
-                    ${!user.verified ? `<button class="admin-verify-btn" onclick="verifyUser('${user.uid}')"><i class="fas fa-check"></i> توثيق</button>` : '<span class="text-green-500 text-xs ml-2">✅ موثق</span>'}
-                    <button class="admin-delete-btn" onclick="deleteUserAccount('${user.uid}')"><i class="fas fa-trash"></i> حذف</button>
-                </div>
-            </div>`;
-        }
-    }
-    document.getElementById('adminUsersList').innerHTML = usersHtml || '<div class="text-center p-4 text-gray-500">لا يوجد مستخدمين</div>';
+    if (usersSnapshot.exists()) for (const user of Object.values(usersSnapshot.val())) usersHtml += `<div class="admin-item"><div><div class="admin-item-name">${escapeHtml(user.name)}</div><div class="admin-item-email">${escapeHtml(user.email)}</div></div><div>${!user.verified ? `<button class="admin-verify-btn" onclick="verifyUser('${user.uid}')">✅ توثيق</button>` : '<span class="text-green-500">✅ موثق</span>'}<button class="admin-delete-btn" onclick="deleteUser('${user.uid}')">🗑️ حذف</button></div></div>`;
+    document.getElementById('adminUsersList').innerHTML = usersHtml;
     
-    // Posts list
     let postsHtml = '';
-    if (postsSnapshot.exists()) {
-        const postsList = Object.values(postsSnapshot.val()).sort((a, b) => b.timestamp - a.timestamp).slice(0, 30);
-        for (const post of postsList) {
-            postsHtml += `<div class="admin-item">
-                <div>
-                    <div class="admin-item-name">${escapeHtml(post.userName)}</div>
-                    <div class="admin-item-email">${escapeHtml(post.text?.substring(0, 60) || 'بدون نص')}</div>
-                </div>
-                <button class="admin-delete-btn" onclick="deletePost('${post.id}')"><i class="fas fa-trash"></i> حذف</button>
-            </div>`;
-        }
-    }
-    document.getElementById('adminPostsList').innerHTML = postsHtml || '<div class="text-center p-4 text-gray-500">لا توجد منشورات</div>';
+    if (postsSnapshot.exists()) for (const post of Object.values(postsSnapshot.val()).sort((a, b) => b.timestamp - a.timestamp).slice(0, 20)) postsHtml += `<div class="admin-item"><div><div class="admin-item-name">${escapeHtml(post.userName)}</div><div class="admin-item-email">${escapeHtml(post.text?.substring(0, 50) || '')}</div></div><button class="admin-delete-btn" onclick="deletePost('${post.id}')">🗑️ حذف</button></div>`;
+    document.getElementById('adminPostsList').innerHTML = postsHtml;
     
     document.getElementById('adminPanel').classList.add('open');
 };
 
-window.verifyUser = async function(userId) { 
-    await db.ref(`users/${userId}`).update({ verified: true }); 
-    showToast('✅ تم توثيق المستخدم'); 
-    openAdminPanel(); 
-};
-
-window.deleteUserAccount = async function(userId) { 
-    if (confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟ سيتم حذف جميع منشوراته ومحتواه.')) { 
-        // Delete user's posts
-        const postsSnapshot = await db.ref('posts').once('value');
-        if (postsSnapshot.exists()) {
-            for (const [postId, post] of Object.entries(postsSnapshot.val())) {
-                if (post.userId === userId) {
-                    await db.ref(`posts/${postId}`).remove();
-                }
-            }
-        }
-        // Delete user
-        await db.ref(`users/${userId}`).remove(); 
-        showToast('🗑️ تم حذف المستخدم'); 
-        openAdminPanel(); 
-        loadFeed();
-    } 
-};
-
-window.closeAdmin = function() { 
-    document.getElementById('adminPanel').classList.remove('open'); 
-};
+window.verifyUser = async function(userId) { await db.ref(`users/${userId}`).update({ verified: true }); showToast('تم توثيق المستخدم'); openAdminPanel(); };
+window.deleteUser = async function(userId) { if (confirm('هل أنت متأكد من حذف هذا المستخدم؟')) { await db.ref(`users/${userId}`).remove(); showToast('تم حذف المستخدم'); openAdminPanel(); } };
+window.closeAdmin = function() { document.getElementById('adminPanel').classList.remove('open'); };
 
 // ==================== Video Call ====================
 window.startVideoCall = async function(userId) {
@@ -1175,17 +1105,6 @@ auth.onAuthStateChanged(async (user) => {
         }
         document.getElementById('authScreen').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
-        
-        // Show/hide admin icon based on email
-        const adminIcon = document.getElementById('adminIcon');
-        if (adminIcon) {
-            if (user.email === ADMIN_EMAIL) {
-                adminIcon.style.display = 'inline-block';
-            } else {
-                adminIcon.style.display = 'none';
-            }
-        }
-        
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'dark') document.body.classList.add('dark-mode');
         loadFeed();
@@ -1250,7 +1169,7 @@ window.endVideoCall = endVideoCall;
 window.openAdminPanel = openAdminPanel;
 window.closeAdmin = closeAdmin;
 window.verifyUser = verifyUser;
-window.deleteUserAccount = deleteUserAccount;
+window.deleteUser = deleteUser;
 window.loadProfileMedia = loadProfileMedia;
 window.toggleVoiceRecording = toggleVoiceRecording;
 window.logout = logout;
