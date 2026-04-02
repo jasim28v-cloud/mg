@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>GLOW | منصة اجتماعية عصرية</title>
-    <meta name="theme-color" content="#1d9bf0">
+    <meta name="theme-color" content="#833ab4">
     
     <!-- Styles & Scripts -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -34,11 +34,11 @@
         }
         body.dark-mode .top-bar {
             background: #000000;
-            border-bottom-color: rgba(255,255,255,0.08);
+            border-bottom-color: #262626;
         }
         body.dark-mode .post-card {
             background: #000000;
-            border-bottom-color: rgba(255,255,255,0.08);
+            border-bottom-color: #262626;
         }
         body.dark-mode .auth-card {
             background: #000000;
@@ -55,7 +55,30 @@
         }
         body.dark-mode .bottom-nav {
             background: #000000;
-            border-top-color: rgba(255,255,255,0.08);
+            border-top-color: #262626;
+        }
+        body.dark-mode .chat-panel {
+            background: #000000;
+        }
+        body.dark-mode .message-bubble {
+            background: #262626;
+            color: white;
+        }
+        body.dark-mode .compose-content {
+            background: #000000;
+            border: 1px solid #262626;
+        }
+        body.dark-mode .compose-textarea {
+            background: #000000;
+            color: white;
+        }
+        body.dark-mode .profile-btn {
+            border-color: #262626;
+            color: white;
+        }
+        body.dark-mode .profile-btn-primary {
+            background: linear-gradient(135deg, #833ab4, #fd1d1d);
+            color: white;
         }
 
         /* Auth Screen */
@@ -130,7 +153,7 @@
             padding-bottom: 70px;
         }
 
-        /* Top Bar - Instagram Style */
+        /* Top Bar */
         .top-bar {
             position: sticky;
             top: 0;
@@ -174,7 +197,7 @@
             justify-content: center;
         }
 
-        /* Post Card - Instagram Style */
+        /* Post Card */
         .feed-container { padding: 0 0 20px; max-width: 600px; margin: 0 auto; }
         .post-card {
             background: #ffffff;
@@ -267,9 +290,8 @@
             color: #8e8e8e;
             cursor: pointer;
         }
-        .post-comments:hover { color: #262626; }
 
-        /* Compose Modal - Instagram Style */
+        /* Compose Modal */
         .compose-modal {
             position: fixed;
             inset: 0;
@@ -291,7 +313,6 @@
             max-height: 80vh;
             overflow-y: auto;
         }
-        body.dark-mode .compose-content { background: #000000; border: 1px solid #262626; }
         .compose-header {
             display: flex;
             justify-content: space-between;
@@ -310,10 +331,6 @@
             font-size: 16px;
             outline: none;
             font-family: inherit;
-        }
-        body.dark-mode .compose-textarea {
-            background: #000000;
-            color: white;
         }
         .media-preview {
             margin: 12px 0;
@@ -339,7 +356,7 @@
             color: #262626;
         }
 
-        /* Profile Screen - Instagram Style */
+        /* Profile Screen */
         .profile-header {
             padding: 20px 16px;
             display: flex;
@@ -353,6 +370,7 @@
             border-radius: 50%;
             overflow: hidden;
             background: linear-gradient(135deg, #833ab4, #fd1d1d);
+            cursor: pointer;
         }
         .profile-avatar-large img { width: 100%; height: 100%; object-fit: cover; }
         .profile-stats {
@@ -362,6 +380,7 @@
         }
         .stat-item {
             text-align: center;
+            cursor: pointer;
         }
         .stat-number {
             font-weight: 700;
@@ -412,10 +431,16 @@
             font-size: 12px;
             font-weight: 600;
             color: #8e8e8e;
+            background: none;
+            border: none;
         }
         .profile-tab.active {
             color: #262626;
             border-top: 2px solid #262626;
+        }
+        body.dark-mode .profile-tab.active {
+            color: #ffffff;
+            border-top-color: #ffffff;
         }
         .profile-grid {
             display: grid;
@@ -434,7 +459,7 @@
             object-fit: cover;
         }
 
-        /* Chat Panel with Voice Recording */
+        /* Chat Panel */
         .chat-panel {
             position: fixed;
             inset: 0;
@@ -477,15 +502,14 @@
             border-radius: 20px;
             font-size: 14px;
         }
-        body.dark-mode .message-bubble { background: #262626; color: white; }
         .message-bubble.sent {
             background: linear-gradient(135deg, #833ab4, #fd1d1d);
             color: white;
         }
-        .message-audio {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .message-image {
+            max-width: 180px;
+            border-radius: 12px;
+            cursor: pointer;
         }
         .audio-player {
             width: 180px;
@@ -538,7 +562,7 @@
             100% { transform: scale(1.2); opacity: 1; }
         }
 
-        /* Bottom Nav - Instagram Style */
+        /* Bottom Nav */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -593,6 +617,103 @@
         }
         .admin-stat-number { font-size: 28px; font-weight: 700; }
         .admin-stat-label { font-size: 12px; opacity: 0.9; }
+        .admin-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #dbdbdb;
+        }
+        .admin-item-name { font-weight: 600; font-size: 13px; }
+        .admin-item-email { font-size: 11px; color: #8e8e8e; }
+        .admin-delete-btn {
+            background: #fd1d1d;
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .admin-verify-btn {
+            background: #833ab4;
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 11px;
+            margin-right: 8px;
+        }
+
+        /* Followers & Search Items */
+        .follower-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-bottom: 1px solid #dbdbdb;
+            cursor: pointer;
+        }
+        .story-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            min-width: 70px;
+        }
+        .story-ring {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #833ab4, #fd1d1d);
+            padding: 2px;
+        }
+        .story-avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #111;
+        }
+        .add-story-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: #1a1a2a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: #833ab4;
+            cursor: pointer;
+            border: 2px dashed #833ab4;
+        }
+        .story-name { font-size: 11px; text-align: center; max-width: 70px; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.3s;
+        }
+        .modal-overlay.open { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 24px;
+            width: 90%;
+            max-width: 400px;
+        }
+        body.dark-mode .modal-content { background: #000000; border: 1px solid #262626; }
 
         .loading { text-align: center; padding: 60px 20px; }
         .spinner {
@@ -622,29 +743,6 @@
             pointer-events: none;
             white-space: nowrap;
         }
-
-        /* Modals */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.9);
-            z-index: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: 0.3s;
-        }
-        .modal-overlay.open { opacity: 1; visibility: visible; }
-        .modal-content {
-            background: #ffffff;
-            border-radius: 20px;
-            padding: 24px;
-            width: 90%;
-            max-width: 400px;
-        }
-        body.dark-mode .modal-content { background: #000000; border: 1px solid #262626; }
     </style>
 </head>
 <body>
@@ -689,10 +787,13 @@
     <div class="top-bar">
         <div class="logo" onclick="goToHome()">GLOW</div>
         <div class="top-icons">
-            <i class="fas fa-plus-square top-icon" onclick="openCompose()"></i>
-            <i class="far fa-heart top-icon" onclick="openNotifications()"></i>
+            <i class="fas fa-search top-icon" onclick="openSearch()"></i>
+            <div class="top-icon" onclick="openNotifications()" id="notifIcon">
+                <i class="far fa-heart"></i>
+            </div>
             <i class="far fa-comment-dots top-icon" onclick="openConversations()"></i>
-            <i class="fas fa-user-circle top-icon" onclick="openMyProfile()"></i>
+            <i class="fas fa-adjust top-icon" onclick="toggleTheme()" id="themeToggle"></i>
+            <i class="fas fa-sign-out-alt top-icon" onclick="logout()" style="color: #fd1d1d;"></i>
         </div>
     </div>
 
@@ -750,7 +851,7 @@
         </div>
         <div style="overflow-y: auto;">
             <div class="profile-header">
-                <div class="profile-avatar-large" id="profileAvatarLarge">
+                <div class="profile-avatar-large" id="profileAvatarLarge" onclick="changeAvatar()">
                     <i class="fas fa-user text-4xl text-white flex items-center justify-center h-full"></i>
                 </div>
                 <div class="profile-stats">
@@ -772,6 +873,7 @@
                 <div class="profile-name" id="profileName"></div>
                 <div class="profile-bio" id="profileBio"></div>
                 <div id="profileButtons" class="profile-buttons"></div>
+                <div id="profileEditButtons" class="profile-buttons" style="margin-top: 12px;"></div>
             </div>
             <div class="profile-tabs">
                 <button class="profile-tab active" onclick="loadProfilePosts(currentProfileUser)"><i class="fas fa-table-cells-large"></i></button>
@@ -794,7 +896,7 @@
         </div>
     </div>
 
-    <!-- Chat Panel with Voice Recording -->
+    <!-- Chat Panel -->
     <div id="chatPanel" class="chat-panel">
         <div class="chat-header">
             <div style="display: flex; align-items: center; gap: 12px;">
@@ -883,12 +985,12 @@
             <div id="adminPostsList"></div>
         </div>
     </div>
-</div>
 
-<!-- Image Modal -->
-<div id="imageModal" class="modal-overlay" onclick="closeImageModal()">
-    <div class="close-modal" onclick="closeImageModal()" style="position: absolute; top: 20px; right: 20px; font-size: 30px; cursor: pointer; color: white;">&times;</div>
-    <img id="modalImage" style="max-width: 95%; max-height: 95%; object-fit: contain;">
+    <!-- Image Modal -->
+    <div id="imageModal" class="modal-overlay" onclick="closeImageModal()">
+        <div class="close-modal" onclick="closeImageModal()" style="position: absolute; top: 20px; right: 20px; font-size: 30px; cursor: pointer; color: white;">&times;</div>
+        <img id="modalImage" style="max-width: 95%; max-height: 95%; object-fit: contain;">
+    </div>
 </div>
 
 <div id="customToast"></div>
