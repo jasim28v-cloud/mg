@@ -15,6 +15,10 @@ let agoraClient = null;
 let localTracks = { videoTrack: null, audioTrack: null };
 let isCallActive = false;
 
+// Admin Credentials
+const ADMIN_EMAIL = 'jasim28v@gmail.com';
+const ADMIN_PASSWORD = 'vv2314vv';
+
 // ==================== Helper Functions ====================
 function showToast(message, duration = 2000) {
     const toast = document.getElementById('customToast');
@@ -259,19 +263,34 @@ window.login = async function() {
                 bio: "مرحباً! أنا في GLOW ✨",
                 avatar: "",
                 cover: "",
-                verified: email === ADMIN_EMAIL,
+                verified: false,
+                isAdmin: false,
                 blockedUsers: {},
                 createdAt: Date.now()
             });
-            currentUser.verified = email === ADMIN_EMAIL;
         }
         
         document.getElementById('authScreen').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
         
+        // ✅ التحقق من المشرف - هذه هي الطريقة الصحيحة
         if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-            showToast('مرحباً بك في لوحة التحكم!');
-            openAdminPanel();
+            showToast('🌟 مرحباً بك في لوحة التحكم يا مدير!');
+            await db.ref(`users/${currentUser.uid}`).update({ 
+                isAdmin: true, 
+                verified: true,
+                role: 'admin',
+                name: 'Admin GLOW'
+            });
+            currentUser.isAdmin = true;
+            currentUser.verified = true;
+            
+            // فتح لوحة التحكم تلقائياً بعد 1 ثانية
+            setTimeout(() => {
+                openAdminPanel();
+            }, 1000);
+        } else {
+            showToast(`مرحباً ${currentUser.displayName || 'مستخدم'}!`);
         }
         
         loadFeed();
@@ -280,7 +299,6 @@ window.login = async function() {
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'dark') document.body.classList.add('dark-mode');
         
-        showToast(`مرحباً ${currentUser.displayName || 'مستخدم'}!`);
     } catch (error) {
         console.error('Login error:', error);
         if (msgDiv) msgDiv.textContent = error.message;
@@ -317,14 +335,14 @@ window.register = async function() {
             bio: "مرحباً! أنا في GLOW ✨",
             avatar: "",
             cover: "",
-            verified: email === ADMIN_EMAIL,
+            verified: false,
+            isAdmin: false,
             blockedUsers: {},
             createdAt: Date.now()
         });
 
         currentUser = userCredential.user;
         currentUser.name = name;
-        currentUser.verified = email === ADMIN_EMAIL;
         
         document.getElementById('authScreen').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
@@ -349,7 +367,6 @@ window.changeAvatar = async function() {
             if (url) {
                 await db.ref(`users/${currentUser.uid}`).update({ avatar: url });
                 currentUser.avatar = url;
-                await currentUser.updateProfile({ photoURL: url });
                 openProfile(currentProfileUser || currentUser.uid);
                 showToast('تم تغيير الصورة الشخصية بنجاح');
             }
@@ -445,7 +462,7 @@ window.deletePost = async function(postId) {
     if (!confirm('هل أنت متأكد من حذف هذا المنشور؟')) return;
     const postSnapshot = await db.ref(`posts/${postId}`).once('value');
     const post = postSnapshot.val();
-    if (post.userId !== currentUser.uid && currentUser.email !== ADMIN_EMAIL) {
+    if (post.userId !== currentUser.uid && currentUser.email !== ADMIN_EMAIL && !currentUser.isAdmin) {
         showToast('لا يمكنك حذف منشور ليس لك');
         return;
     }
@@ -493,7 +510,7 @@ window.sharePost = async function(postId) {
         userId: currentUser.uid,
         userName: currentUser.displayName || currentUser.name,
         userAvatar: currentUser.avatar || "",
-        text: `شارك منشور: ${post.text}`,
+        text: `شارك منشور: ${post.text.substring(0, 100)}`,
         originalPostId: postId,
         originalUser: post.userName,
         timestamp: Date.now()
@@ -656,11 +673,22 @@ window.openProfile = async function(userId) {
     const userData = snapshot.val();
     if (!userData) return;
     
-    document.getElementById('profileName').innerHTML = `${escapeHtml(userData.name)} ${userData.verified ? '<i class="fas fa-check-circle text-[#833ab4] text-sm"></i>' : ''}`;
-    document.getElementById('profileBio').textContent = userData.bio || "مرحباً! أنا في GLOW ✨";
+    const profileCover = document.getElementById('profileCover');
+    if (profileCover) {
+        if (userData.cover) {
+            profileCover.style.backgroundImage = `url(${userData.cover})`;
+            profileCover.style.backgroundSize = 'cover';
+            profileCover.style.backgroundPosition = 'center';
+        } else {
+            profileCover.style.backgroundImage = 'linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)';
+        }
+    }
     
     const profileAvatarLarge = document.getElementById('profileAvatarLarge');
-    profileAvatarLarge.innerHTML = userData.avatar ? `<img src="${userData.avatar}" style="width:100%;height:100%;object-fit:cover">` : '<i class="fas fa-user text-4xl text-white flex items-center justify-center h-full"></i>';
+    profileAvatarLarge.innerHTML = userData.avatar ? `<img src="${userData.avatar}" style="width:100%;height:100%;object-fit:cover">` : '<i class="fas fa-user text-5xl text-white flex items-center justify-center h-full"></i>';
+    
+    document.getElementById('profileName').innerHTML = `${escapeHtml(userData.name)} ${userData.verified ? '<i class="fas fa-check-circle text-[#833ab4] text-sm"></i>' : ''}`;
+    document.getElementById('profileBio').textContent = userData.bio || "مرحباً! أنا في GLOW ✨";
     
     const followersSnapshot = await db.ref(`followers/${userId}`).once('value');
     const followingSnapshot = await db.ref(`following/${userId}`).once('value');
@@ -672,8 +700,6 @@ window.openProfile = async function(userId) {
     document.getElementById('profilePostsCount').textContent = posts ? Object.values(posts).filter(p => p.userId === userId).length : 0;
     
     const buttonsDiv = document.getElementById('profileButtons');
-    const editButtonsDiv = document.getElementById('profileEditButtons');
-    
     if (userId !== currentUser.uid) {
         const isFollowing = await checkIfFollowing(userId);
         const isBlockedUser = await isBlocked(userId);
@@ -683,18 +709,15 @@ window.openProfile = async function(userId) {
             <button class="profile-btn" onclick="startVideoCall('${userId}')"><i class="fas fa-video"></i></button>
             ${isBlockedUser ? `<button class="profile-btn" onclick="unblockUser('${userId}')">إلغاء الحظر</button>` : `<button class="profile-btn" onclick="blockUser('${userId}')">حظر</button>`}
         `;
-        if (editButtonsDiv) editButtonsDiv.innerHTML = '';
     } else {
+        // ✅ زر لوحة التحكم يظهر هنا للمشرف
+        const isAdminUser = (currentUser.email === ADMIN_EMAIL || currentUser.isAdmin);
         buttonsDiv.innerHTML = `
             <button class="profile-btn" onclick="openEditProfileModal()"><i class="fas fa-edit"></i> تعديل</button>
-            ${currentUser.email === ADMIN_EMAIL ? `<button class="profile-btn profile-btn-primary" onclick="openAdminPanel()"><i class="fas fa-cog"></i> لوحة التحكم</button>` : ''}
+            <button class="profile-btn" onclick="changeAvatar()"><i class="fas fa-camera"></i> صورة</button>
+            <button class="profile-btn" onclick="changeCover()"><i class="fas fa-image"></i> غلاف</button>
+            ${isAdminUser ? `<button class="profile-btn profile-btn-primary" onclick="openAdminPanel()"><i class="fas fa-cog"></i> لوحة التحكم</button>` : ''}
         `;
-        if (editButtonsDiv) {
-            editButtonsDiv.innerHTML = `
-                <button class="profile-btn" onclick="changeAvatar()"><i class="fas fa-camera"></i> تغيير الصورة</button>
-                <button class="profile-btn" onclick="changeCover()"><i class="fas fa-image"></i> تغيير الغلاف</button>
-            `;
-        }
     }
     
     await loadProfilePosts(userId);
@@ -932,31 +955,94 @@ window.searchAll = async function() {
     document.getElementById('searchResults').innerHTML = html || '<div class="text-center p-4 text-gray-500">لا توجد نتائج</div>';
 };
 
-// ==================== Admin Panel ====================
+// ==================== Admin Panel (المطلوبة) ====================
 window.openAdminPanel = async function() {
-    if (currentUser.email !== ADMIN_EMAIL) { showToast('غير مصرح لك بالدخول إلى لوحة التحكم'); return; }
+    // ✅ التحقق من صلاحيات المشرف
+    if (currentUser.email !== ADMIN_EMAIL && !currentUser.isAdmin) {
+        showToast('🚫 غير مصرح لك بالدخول إلى لوحة التحكم');
+        return;
+    }
+    
+    showToast('🔧 جاري تحميل لوحة التحكم...');
+    
+    // جلب الإحصائيات
     const usersSnapshot = await db.ref('users').once('value');
     const postsSnapshot = await db.ref('posts').once('value');
     const commentsSnapshot = await db.ref('comments').once('value');
+    
     const usersCount = usersSnapshot.exists() ? Object.keys(usersSnapshot.val()).length : 0;
     const postsCount = postsSnapshot.exists() ? Object.keys(postsSnapshot.val()).length : 0;
+    
     let commentsCount = 0;
-    if (commentsSnapshot.exists()) for (const pc of Object.values(commentsSnapshot.val())) commentsCount += Object.keys(pc).length;
+    if (commentsSnapshot.exists()) {
+        for (const pc of Object.values(commentsSnapshot.val())) {
+            commentsCount += Object.keys(pc).length;
+        }
+    }
+    
     document.getElementById('adminUsersCount').textContent = usersCount;
     document.getElementById('adminPostsCount').textContent = postsCount;
     document.getElementById('adminCommentsCount').textContent = commentsCount;
+    
+    // عرض المستخدمين
     let usersHtml = '';
-    if (usersSnapshot.exists()) for (const user of Object.values(usersSnapshot.val())) usersHtml += `<div class="admin-item"><div><div class="admin-item-name">${escapeHtml(user.name)}</div><div class="admin-item-email">${escapeHtml(user.email)}</div></div><div>${!user.verified ? `<button class="admin-verify-btn" onclick="verifyUser('${user.uid}')">✅ توثيق</button>` : '<span class="text-green-500">✅ موثق</span>'}<button class="admin-delete-btn" onclick="deleteUser('${user.uid}')">🗑️ حذف</button></div></div>`;
+    if (usersSnapshot.exists()) {
+        const users = Object.values(usersSnapshot.val());
+        for (const user of users) {
+            usersHtml += `
+                <div class="admin-item">
+                    <div>
+                        <div class="admin-item-name">${escapeHtml(user.name)}</div>
+                        <div class="admin-item-email">${escapeHtml(user.email)}</div>
+                    </div>
+                    <div>
+                        ${!user.verified ? `<button class="admin-verify-btn" onclick="verifyUser('${user.uid}')">✅ توثيق</button>` : '<span class="text-green-500">✅ موثق</span>'}
+                        <button class="admin-delete-btn" onclick="deleteUser('${user.uid}')">🗑️ حذف</button>
+                    </div>
+                </div>
+            `;
+        }
+    }
     document.getElementById('adminUsersList').innerHTML = usersHtml;
+    
+    // عرض المنشورات
     let postsHtml = '';
-    if (postsSnapshot.exists()) for (const post of Object.values(postsSnapshot.val()).sort((a, b) => b.timestamp - a.timestamp).slice(0, 20)) postsHtml += `<div class="admin-item"><div><div class="admin-item-name">${escapeHtml(post.userName)}</div><div class="admin-item-email">${escapeHtml(post.text?.substring(0, 50) || '')}</div></div><button class="admin-delete-btn" onclick="deletePost('${post.id}')">🗑️ حذف</button></div>`;
+    if (postsSnapshot.exists()) {
+        const posts = Object.values(postsSnapshot.val()).sort((a, b) => b.timestamp - a.timestamp);
+        for (const post of posts.slice(0, 20)) {
+            postsHtml += `
+                <div class="admin-item">
+                    <div>
+                        <div class="admin-item-name">${escapeHtml(post.userName)}</div>
+                        <div class="admin-item-email">${escapeHtml(post.text?.substring(0, 50) || '')}</div>
+                    </div>
+                    <button class="admin-delete-btn" onclick="deletePost('${post.id}')">🗑️ حذف</button>
+                </div>
+            `;
+        }
+    }
     document.getElementById('adminPostsList').innerHTML = postsHtml;
+    
     document.getElementById('adminPanel').classList.add('open');
 };
 
-window.verifyUser = async function(userId) { await db.ref(`users/${userId}`).update({ verified: true }); showToast('تم توثيق المستخدم'); openAdminPanel(); };
-window.deleteUser = async function(userId) { if (confirm('هل أنت متأكد من حذف هذا المستخدم؟')) { await db.ref(`users/${userId}`).remove(); showToast('تم حذف المستخدم'); openAdminPanel(); } };
-window.closeAdmin = function() { document.getElementById('adminPanel').classList.remove('open'); };
+window.verifyUser = async function(userId) {
+    await db.ref(`users/${userId}`).update({ verified: true });
+    showToast('تم توثيق المستخدم');
+    openAdminPanel();
+};
+
+window.deleteUser = async function(userId) {
+    if (confirm('هل أنت متأكد من حذف هذا المستخدم؟')) {
+        await db.ref(`users/${userId}`).remove();
+        showToast('تم حذف المستخدم');
+        openAdminPanel();
+    }
+};
+
+window.closeAdmin = function() {
+    document.getElementById('adminPanel').classList.remove('open');
+};
 
 // ==================== Video Call ====================
 window.startVideoCall = async function(userId) {
@@ -1057,8 +1143,23 @@ auth.onAuthStateChanged(async (user) => {
     if (user) {
         currentUser = user;
         const snapshot = await db.ref(`users/${user.uid}`).once('value');
-        if (snapshot.exists()) currentUser = { ...currentUser, ...snapshot.val() };
-        else await db.ref(`users/${user.uid}`).set({ uid: user.uid, name: user.displayName || user.email.split('@')[0], email: user.email, bio: "مرحباً! أنا في GLOW ✨", avatar: "", cover: "", verified: user.email === ADMIN_EMAIL, blockedUsers: {}, createdAt: Date.now() });
+        if (snapshot.exists()) {
+            currentUser = { ...currentUser, ...snapshot.val() };
+        } else {
+            await db.ref(`users/${user.uid}`).set({ 
+                uid: user.uid, 
+                name: user.displayName || user.email.split('@')[0], 
+                email: user.email, 
+                bio: "مرحباً! أنا في GLOW ✨", 
+                avatar: "", 
+                cover: "", 
+                verified: false, 
+                isAdmin: user.email === ADMIN_EMAIL,
+                blockedUsers: {}, 
+                createdAt: Date.now() 
+            });
+            currentUser.isAdmin = user.email === ADMIN_EMAIL;
+        }
         document.getElementById('authScreen').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
         const savedTheme = localStorage.getItem('theme');
