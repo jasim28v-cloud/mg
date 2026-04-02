@@ -6,7 +6,6 @@
     <title>GLOW | منصة اجتماعية عصرية</title>
     <meta name="theme-color" content="#833ab4">
     
-    <!-- Styles & Scripts -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -49,10 +48,6 @@
             border-color: #2f3336;
             color: white;
         }
-        body.dark-mode .comment-input input {
-            background: #1a1a1a;
-            color: white;
-        }
         body.dark-mode .bottom-nav {
             background: #000000;
             border-top-color: #262626;
@@ -68,17 +63,8 @@
             background: #000000;
             border: 1px solid #262626;
         }
-        body.dark-mode .compose-textarea {
-            background: #000000;
-            color: white;
-        }
-        body.dark-mode .profile-btn {
-            border-color: #262626;
-            color: white;
-        }
-        body.dark-mode .profile-btn-primary {
-            background: linear-gradient(135deg, #833ab4, #fd1d1d);
-            color: white;
+        body.dark-mode .profile-cover {
+            border-bottom: 1px solid #262626;
         }
 
         /* Auth Screen */
@@ -195,6 +181,159 @@
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+
+        /* Profile Cover */
+        .profile-cover {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
+            position: relative;
+            cursor: pointer;
+            background-size: cover;
+            background-position: center;
+        }
+        .profile-cover-edit {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background: rgba(0,0,0,0.6);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+        }
+        .profile-avatar-wrapper {
+            position: relative;
+            margin-top: -60px;
+            padding: 0 16px;
+        }
+        .profile-avatar-large {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 4px solid #ffffff;
+            background: linear-gradient(135deg, #833ab4, #fd1d1d);
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        body.dark-mode .profile-avatar-large {
+            border-color: #000000;
+        }
+        .profile-avatar-large img { width: 100%; height: 100%; object-fit: cover; }
+        .avatar-edit-btn {
+            position: absolute;
+            bottom: 5px;
+            right: 20px;
+            background: rgba(0,0,0,0.6);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+        }
+        .profile-info {
+            padding: 12px 16px 16px;
+        }
+        .profile-name {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        .profile-bio {
+            font-size: 14px;
+            color: #8e8e8e;
+            margin-top: 4px;
+        }
+        .profile-stats {
+            display: flex;
+            gap: 30px;
+            margin-top: 12px;
+            padding: 12px 0;
+            border-top: 1px solid #dbdbdb;
+            border-bottom: 1px solid #dbdbdb;
+        }
+        body.dark-mode .profile-stats {
+            border-color: #262626;
+        }
+        .stat-item {
+            text-align: center;
+            cursor: pointer;
+        }
+        .stat-number {
+            font-weight: 700;
+            font-size: 18px;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #8e8e8e;
+        }
+        .profile-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .profile-btn {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            border: 1px solid #dbdbdb;
+            background: none;
+        }
+        .profile-btn-primary {
+            background: linear-gradient(135deg, #833ab4, #fd1d1d);
+            color: white;
+            border: none;
+        }
+        .profile-tabs {
+            display: flex;
+            margin-top: 8px;
+        }
+        .profile-tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: #8e8e8e;
+            background: none;
+            border: none;
+        }
+        .profile-tab.active {
+            color: #262626;
+            border-bottom: 2px solid #262626;
+        }
+        body.dark-mode .profile-tab.active {
+            color: #ffffff;
+            border-bottom-color: #ffffff;
+        }
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            margin-top: 4px;
+        }
+        .grid-item {
+            aspect-ratio: 1;
+            overflow: hidden;
+            cursor: pointer;
+            background: #f5f5f5;
+        }
+        .grid-item img, .grid-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         /* Post Card */
@@ -354,109 +493,6 @@
             font-size: 24px;
             cursor: pointer;
             color: #262626;
-        }
-
-        /* Profile Screen */
-        .profile-header {
-            padding: 20px 16px;
-            display: flex;
-            align-items: center;
-            gap: 30px;
-            border-bottom: 1px solid #dbdbdb;
-        }
-        .profile-avatar-large {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            overflow: hidden;
-            background: linear-gradient(135deg, #833ab4, #fd1d1d);
-            cursor: pointer;
-        }
-        .profile-avatar-large img { width: 100%; height: 100%; object-fit: cover; }
-        .profile-stats {
-            display: flex;
-            gap: 30px;
-            flex: 1;
-        }
-        .stat-item {
-            text-align: center;
-            cursor: pointer;
-        }
-        .stat-number {
-            font-weight: 700;
-            font-size: 18px;
-        }
-        .stat-label {
-            font-size: 12px;
-            color: #8e8e8e;
-        }
-        .profile-name {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-        .profile-bio {
-            font-size: 14px;
-            color: #8e8e8e;
-        }
-        .profile-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 16px;
-        }
-        .profile-btn {
-            flex: 1;
-            padding: 8px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            border: 1px solid #dbdbdb;
-            background: none;
-        }
-        .profile-btn-primary {
-            background: linear-gradient(135deg, #833ab4, #fd1d1d);
-            color: white;
-            border: none;
-        }
-        .profile-tabs {
-            display: flex;
-            border-top: 1px solid #dbdbdb;
-        }
-        .profile-tab {
-            flex: 1;
-            text-align: center;
-            padding: 12px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-            color: #8e8e8e;
-            background: none;
-            border: none;
-        }
-        .profile-tab.active {
-            color: #262626;
-            border-top: 2px solid #262626;
-        }
-        body.dark-mode .profile-tab.active {
-            color: #ffffff;
-            border-top-color: #ffffff;
-        }
-        .profile-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2px;
-        }
-        .grid-item {
-            aspect-ratio: 1;
-            overflow: hidden;
-            cursor: pointer;
-            background: #f5f5f5;
-        }
-        .grid-item img, .grid-item video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
         }
 
         /* Chat Panel */
@@ -843,17 +879,32 @@
         </div>
     </div>
 
-    <!-- Profile Panel -->
+    <!-- Profile Panel with Cover Photo -->
     <div id="profilePanel" class="chat-panel">
         <div class="chat-header">
             <h3 style="font-weight: 600;">الملف الشخصي</h3>
             <button onclick="closeProfile()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
         </div>
         <div style="overflow-y: auto;">
-            <div class="profile-header">
-                <div class="profile-avatar-large" id="profileAvatarLarge" onclick="changeAvatar()">
-                    <i class="fas fa-user text-4xl text-white flex items-center justify-center h-full"></i>
+            <!-- Cover Photo -->
+            <div id="profileCover" class="profile-cover" onclick="changeCover()">
+                <div class="profile-cover-edit" onclick="event.stopPropagation(); changeCover()">
+                    <i class="fas fa-camera"></i>
                 </div>
+            </div>
+            <!-- Avatar -->
+            <div class="profile-avatar-wrapper">
+                <div class="profile-avatar-large" id="profileAvatarLarge" onclick="changeAvatar()">
+                    <i class="fas fa-user text-5xl text-white flex items-center justify-center h-full"></i>
+                </div>
+                <div class="avatar-edit-btn" onclick="event.stopPropagation(); changeAvatar()">
+                    <i class="fas fa-camera fa-sm"></i>
+                </div>
+            </div>
+            <!-- Profile Info -->
+            <div class="profile-info">
+                <div class="profile-name" id="profileName"></div>
+                <div class="profile-bio" id="profileBio"></div>
                 <div class="profile-stats">
                     <div class="stat-item" onclick="openFollowersList('followers')">
                         <div class="stat-number" id="profileFollowersCount">0</div>
@@ -868,16 +919,12 @@
                         <div class="stat-label">منشورات</div>
                     </div>
                 </div>
-            </div>
-            <div style="padding: 0 16px 16px;">
-                <div class="profile-name" id="profileName"></div>
-                <div class="profile-bio" id="profileBio"></div>
                 <div id="profileButtons" class="profile-buttons"></div>
-                <div id="profileEditButtons" class="profile-buttons" style="margin-top: 12px;"></div>
             </div>
+            <!-- Tabs -->
             <div class="profile-tabs">
-                <button class="profile-tab active" onclick="loadProfilePosts(currentProfileUser)"><i class="fas fa-table-cells-large"></i></button>
-                <button class="profile-tab" onclick="loadProfileMedia(currentProfileUser)"><i class="fas fa-clapperboard"></i></button>
+                <button class="profile-tab active" onclick="loadProfilePosts(currentProfileUser)"><i class="fas fa-table-cells-large"></i> المنشورات</button>
+                <button class="profile-tab" onclick="loadProfileMedia(currentProfileUser)"><i class="fas fa-clapperboard"></i> الوسائط</button>
             </div>
             <div id="profilePostsGrid" class="profile-grid"></div>
         </div>
