@@ -6,18 +6,14 @@ let currentProfileUser = null;
 let selectedMediaFile = null;
 let selectedMediaType = null;
 let editingPostId = null;
-let isCallActive = false;
-let isStreaming = false;
 let mediaRecorder = null;
 let audioChunks = [];
 let isRecording = false;
-let currentRecording = null;
 
 // Agora Variables
 let agoraClient = null;
-let liveClient = null;
 let localTracks = { videoTrack: null, audioTrack: null };
-let currentStream = null;
+let isCallActive = false;
 
 // ==================== Helper Functions ====================
 function showToast(message, duration = 2000) {
@@ -41,19 +37,6 @@ function openImageModal(src) {
 function closeImageModal() {
     const modal = document.getElementById('imageModal');
     if (modal) modal.classList.remove('open');
-}
-
-function toggleTheme() {
-    document.body.classList.toggle('dark-mode');
-    const icon = document.querySelector('.top-icon:last-child i');
-    if (document.body.classList.contains('dark-mode')) {
-        icon?.classList.remove('fa-sun');
-        icon?.classList.add('fa-moon');
-    } else {
-        icon?.classList.remove('fa-moon');
-        icon?.classList.add('fa-sun');
-    }
-    localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
 }
 
 function formatTime(timestamp) {
@@ -105,7 +88,7 @@ async function uploadToCloudinary(file) {
     }
 }
 
-// ==================== Voice Recording Functions ====================
+// ==================== Voice Recording ====================
 async function startVoiceRecording() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -166,7 +149,7 @@ async function initAgoraCall() {
     return agoraClient;
 }
 
-async function startVideoCallWithAgora(channelName, userId, isCaller = true) {
+async function startVideoCallWithAgora(channelName, userId) {
     try {
         const client = await initAgoraCall();
         const token = null;
@@ -210,6 +193,38 @@ async function endVideoCall() {
     }
     document.getElementById('videoCallModal')?.classList.remove('open');
 }
+
+// ==================== Theme Functions ====================
+window.toggleTheme = function() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    const themeIcon = document.getElementById('themeToggle');
+    if (themeIcon) {
+        if (isDark) {
+            themeIcon.classList.remove('fa-adjust');
+            themeIcon.classList.add('fa-sun');
+        } else {
+            themeIcon.classList.remove('fa-sun');
+            themeIcon.classList.add('fa-adjust');
+        }
+    }
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    showToast(isDark ? 'الوضع الليلي' : 'الوضع النهاري');
+};
+
+// ==================== Logout Function ====================
+window.logout = async function() {
+    try {
+        await auth.signOut();
+        showToast('تم تسجيل الخروج بنجاح');
+        setTimeout(() => {
+            location.reload();
+        }, 1000);
+    } catch (error) {
+        console.error('Logout error:', error);
+        showToast('حدث خطأ أثناء تسجيل الخروج');
+    }
+};
 
 // ==================== Auth Functions ====================
 window.switchAuth = function(form) {
@@ -322,6 +337,46 @@ window.register = async function() {
     }
 };
 
+// ==================== Change Avatar & Cover ====================
+window.changeAvatar = async function() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const url = await uploadToCloudinary(file);
+            if (url) {
+                await db.ref(`users/${currentUser.uid}`).update({ avatar: url });
+                currentUser.avatar = url;
+                await currentUser.updateProfile({ photoURL: url });
+                openProfile(currentProfileUser || currentUser.uid);
+                showToast('تم تغيير الصورة الشخصية بنجاح');
+            }
+        }
+    };
+    input.click();
+};
+
+window.changeCover = async function() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const url = await uploadToCloudinary(file);
+            if (url) {
+                await db.ref(`users/${currentUser.uid}`).update({ cover: url });
+                currentUser.cover = url;
+                openProfile(currentProfileUser || currentUser.uid);
+                showToast('تم تغيير صورة الغلاف بنجاح');
+            }
+        }
+    };
+    input.click();
+};
+
 // ==================== Block User ====================
 async function blockUser(userId) {
     await db.ref(`users/${currentUser.uid}/blockedUsers/${userId}`).set(true);
@@ -386,19 +441,6 @@ window.createPost = async function() {
     showToast('تم نشر المنشور بنجاح!');
 };
 
-window.editPost = async function(postId) {
-    const postSnapshot = await db.ref(`posts/${postId}`).once('value');
-    const post = postSnapshot.val();
-    if (post.userId !== currentUser.uid) {
-        showToast('لا يمكنك تعديل منشور ليس لك');
-        return;
-    }
-    editingPostId = postId;
-    document.getElementById('postText').value = post.text;
-    openCompose();
-    showToast('يمكنك الآن تعديل المنشور');
-};
-
 window.deletePost = async function(postId) {
     if (!confirm('هل أنت متأكد من حذف هذا المنشور؟')) return;
     const postSnapshot = await db.ref(`posts/${postId}`).once('value');
@@ -440,6 +482,23 @@ window.likePost = async function(postId) {
         }
     }
     loadFeed();
+};
+
+window.sharePost = async function(postId) {
+    const postSnapshot = await db.ref(`posts/${postId}`).once('value');
+    const post = postSnapshot.val();
+    const shareRef = db.ref('posts').push();
+    await shareRef.set({
+        id: shareRef.key,
+        userId: currentUser.uid,
+        userName: currentUser.displayName || currentUser.name,
+        userAvatar: currentUser.avatar || "",
+        text: `شارك منشور: ${post.text}`,
+        originalPostId: postId,
+        originalUser: post.userName,
+        timestamp: Date.now()
+    });
+    showToast('تمت المشاركة!');
 };
 
 async function loadFeed() {
@@ -507,23 +566,6 @@ async function loadFeed() {
     }
     feedContainer.innerHTML = html;
 }
-
-window.sharePost = async function(postId) {
-    const postSnapshot = await db.ref(`posts/${postId}`).once('value');
-    const post = postSnapshot.val();
-    const shareRef = db.ref('posts').push();
-    await shareRef.set({
-        id: shareRef.key,
-        userId: currentUser.uid,
-        userName: currentUser.displayName || currentUser.name,
-        userAvatar: currentUser.avatar || "",
-        text: `شارك منشور: ${post.text}`,
-        originalPostId: postId,
-        originalUser: post.userName,
-        timestamp: Date.now()
-    });
-    showToast('تمت المشاركة!');
-};
 
 // ==================== Hashtag Search ====================
 window.searchHashtag = async function(tag) {
@@ -630,6 +672,8 @@ window.openProfile = async function(userId) {
     document.getElementById('profilePostsCount').textContent = posts ? Object.values(posts).filter(p => p.userId === userId).length : 0;
     
     const buttonsDiv = document.getElementById('profileButtons');
+    const editButtonsDiv = document.getElementById('profileEditButtons');
+    
     if (userId !== currentUser.uid) {
         const isFollowing = await checkIfFollowing(userId);
         const isBlockedUser = await isBlocked(userId);
@@ -639,11 +683,18 @@ window.openProfile = async function(userId) {
             <button class="profile-btn" onclick="startVideoCall('${userId}')"><i class="fas fa-video"></i></button>
             ${isBlockedUser ? `<button class="profile-btn" onclick="unblockUser('${userId}')">إلغاء الحظر</button>` : `<button class="profile-btn" onclick="blockUser('${userId}')">حظر</button>`}
         `;
+        if (editButtonsDiv) editButtonsDiv.innerHTML = '';
     } else {
         buttonsDiv.innerHTML = `
             <button class="profile-btn" onclick="openEditProfileModal()"><i class="fas fa-edit"></i> تعديل</button>
             ${currentUser.email === ADMIN_EMAIL ? `<button class="profile-btn profile-btn-primary" onclick="openAdminPanel()"><i class="fas fa-cog"></i> لوحة التحكم</button>` : ''}
         `;
+        if (editButtonsDiv) {
+            editButtonsDiv.innerHTML = `
+                <button class="profile-btn" onclick="changeAvatar()"><i class="fas fa-camera"></i> تغيير الصورة</button>
+                <button class="profile-btn" onclick="changeCover()"><i class="fas fa-image"></i> تغيير الغلاف</button>
+            `;
+        }
     }
     
     await loadProfilePosts(userId);
@@ -720,25 +771,6 @@ window.saveProfileEdit = async function() {
     closeEditProfileModal();
     openProfile(currentUser.uid);
     showToast('تم حفظ التغييرات');
-};
-
-window.changeAvatar = async function() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const url = await uploadToCloudinary(file);
-            if (url) {
-                await db.ref(`users/${currentUser.uid}`).update({ avatar: url });
-                currentUser.avatar = url;
-                openProfile(currentProfileUser);
-                showToast('تم تغيير الصورة الشخصية');
-            }
-        }
-    };
-    input.click();
 };
 
 // ==================== Chat Functions ====================
@@ -835,7 +867,7 @@ async function loadNotifications() {
     if (!currentUser) return;
     db.ref(`notifications/${currentUser.uid}`).on('value', (snapshot) => {
         const notifications = snapshot.val();
-        const notifIcon = document.querySelector('.top-icon.fa-heart')?.parentElement;
+        const notifIcon = document.getElementById('notifIcon');
         if (!notifIcon) return;
         const existingBadge = notifIcon.querySelector('.notification-badge');
         if (notifications) {
@@ -929,7 +961,7 @@ window.closeAdmin = function() { document.getElementById('adminPanel').classList
 // ==================== Video Call ====================
 window.startVideoCall = async function(userId) {
     const channelName = `call_${getChatId(currentUser.uid, userId)}`;
-    await startVideoCallWithAgora(channelName, currentUser.uid, true);
+    await startVideoCallWithAgora(channelName, currentUser.uid);
     const notifRef = db.ref(`notifications/${userId}`).push();
     await notifRef.set({ type: 'call', userId: currentUser.uid, userName: currentUser.displayName, channelName: channelName, timestamp: Date.now(), read: false });
 };
@@ -1044,7 +1076,6 @@ window.switchAuth = switchAuth;
 window.login = login;
 window.register = register;
 window.createPost = createPost;
-window.editPost = editPost;
 window.deletePost = deletePost;
 window.likePost = likePost;
 window.sharePost = sharePost;
@@ -1057,6 +1088,7 @@ window.openEditProfileModal = openEditProfileModal;
 window.closeEditProfileModal = closeEditProfileModal;
 window.saveProfileEdit = saveProfileEdit;
 window.changeAvatar = changeAvatar;
+window.changeCover = changeCover;
 window.openChat = openChat;
 window.sendChatMessage = sendChatMessage;
 window.sendChatImage = sendChatImage;
@@ -1096,3 +1128,4 @@ window.verifyUser = verifyUser;
 window.deleteUser = deleteUser;
 window.loadProfileMedia = loadProfileMedia;
 window.toggleVoiceRecording = toggleVoiceRecording;
+window.logout = logout;
