@@ -1041,8 +1041,8 @@
                 <h3 style="font-weight: 700; margin-top: 8px;">🔐 دخول المشرف</h3>
                 <p style="font-size: 12px; color: #8e8e8e;">الرجاء إدخال بيانات المشرف</p>
             </div>
-            <input type="email" id="adminEmail" class="chat-input" style="width: 100%; margin-bottom: 12px;" placeholder="البريد الإلكتروني" value="jasim28v@gmail.com">
-            <input type="password" id="adminPassword" class="chat-input" style="width: 100%; margin-bottom: 12px;" placeholder="كلمة المرور" value="vv2314vv">
+            <input type="email" id="adminEmail" class="chat-input" style="width: 100%; margin-bottom: 12px;" placeholder="البريد الإلكتروني">
+            <input type="password" id="adminPassword" class="chat-input" style="width: 100%; margin-bottom: 12px;" placeholder="كلمة المرور">
             <div id="adminLoginMsg" class="error-msg" style="margin-bottom: 12px;"></div>
             <div style="display: flex; gap: 10px;">
                 <button class="profile-btn" onclick="closeAdminLoginModal()">إلغاء</button>
@@ -1060,7 +1060,35 @@
 
 <div id="customToast"></div>
 
-<script src="firebase-config.js"></script>
+<script>
+// Firebase Configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyAxtEkrEgl0C9djPkxKKX-sENtOzPEbHB8",
+    authDomain: "tope-e5350.firebaseapp.com",
+    databaseURL: "https://tope-e5350-default-rtdb.firebaseio.com",
+    projectId: "tope-e5350",
+    storageBucket: "tope-e5350.firebasestorage.app",
+    messagingSenderId: "187788115549",
+    appId: "1:187788115549:web:0f3c00ff62c1ebc5ed97b4"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+const storage = firebase.storage();
+
+// Cloudinary
+const CLOUD_NAME = 'daemk3hut';
+const UPLOAD_PRESET = 'fok2_k';
+
+// Agora
+const AGORA_APP_ID_CALL = '929646610d814d529a06c4081c81325f';
+
+// Admin
+const ADMIN_EMAIL = 'jasim28v@gmail.com';
+const ADMIN_PASSWORD = 'vv2314vv';
+</script>
+
 <script src="script.js"></script>
 
 </body>
